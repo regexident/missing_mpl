@@ -73,8 +73,8 @@ impl EarlyLintPass for Pass {
 
             if distance > MPL_HEADER.len() / 10 {
                 let lint_span = span.with_hi(span.lo() + BytePos::from_usize(1));
-                let message = "Missing MPL license header in source file.";
-                context.span_lint(MISSING_MPL, lint_span, message);
+                let message = format!("Missing MPL license header in source file:\n{}", MPL_HEADER);
+                context.span_lint(MISSING_MPL, lint_span, &message);
             }
         }
     }
