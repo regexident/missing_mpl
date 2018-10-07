@@ -16,15 +16,16 @@ extern crate rustc_plugin;
 
 extern crate strsim;
 
-use std::str;
 use std::collections::HashSet;
+use std::str;
 
-use rustc::lint::{EarlyContext, LintContext, LintPass, EarlyLintPass,
-                  EarlyLintPassObject, LintArray};
+use rustc::lint::{
+    EarlyContext, EarlyLintPass, EarlyLintPassObject, LintArray, LintContext, LintPass,
+};
 use rustc_plugin::Registry;
 use syntax::ast::{Mod, NodeId};
-use syntax::codemap::Span;
-use syntax_pos::{Pos, BytePos};
+use syntax::source_map::Span;
+use syntax_pos::{BytePos, Pos};
 
 static MPL_HEADER: &'static str = r#"
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -32,11 +33,15 @@ static MPL_HEADER: &'static str = r#"
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 "#;
 
-declare_lint!(MISSING_MPL, Warn, "Warn about missing MPL license header in source file.");
+declare_lint!(
+    MISSING_MPL,
+    Warn,
+    "Warn about missing MPL license header in source file."
+);
 
 #[derive(Default)]
 struct Pass {
-    file_pos: HashSet<BytePos>
+    file_pos: HashSet<BytePos>,
 }
 
 impl LintPass for Pass {
@@ -49,7 +54,7 @@ impl EarlyLintPass for Pass {
     fn check_mod(&mut self, context: &EarlyContext, module: &Mod, _: Span, _: NodeId) {
         let span = module.inner;
 
-        let code_map = context.sess.codemap();
+        let code_map = context.sess.source_map();
         let location = code_map.lookup_char_pos(span.lo());
         let file_map = location.file;
 
