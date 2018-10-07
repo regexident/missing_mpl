@@ -16,7 +16,7 @@ repository = "https://github.com/regexident/missing_mpl"
 version = "0.1.1"
 
 [dependencies]
-strsim = "0.7.0"
+strsim = "~0.8"
 
 [lib]
 crate-type = ["dylib"]
