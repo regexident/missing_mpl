@@ -13,10 +13,11 @@ license = "MPL-2.0"
 name = "missing_mpl"
 readme = "README.md"
 repository = "https://github.com/regexident/missing_mpl"
-version = "0.1.2"
+version = "0.2.0"
+edition = "2018"
 
 [dependencies]
-strsim = "~0.8"
+strsim = "~0.10"
 
 [lib]
 crate-type = ["dylib"]
