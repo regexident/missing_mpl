@@ -2,55 +2,44 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#![feature(plugin_registrar)]
+#![feature(plugin_registrar, plugin)]
 #![feature(box_syntax, rustc_private)]
-#![feature(macro_vis_matcher)]
 
-extern crate syntax;
-extern crate syntax_pos;
-
-// Load rustc as a plugin to get macros
-#[macro_use]
-extern crate rustc;
-extern crate rustc_plugin;
-
-extern crate strsim;
+extern crate rustc_ast;
+extern crate rustc_errors;
+extern crate rustc_lint;
+extern crate rustc_parse;
+extern crate rustc_session;
+extern crate rustc_span;
 
 use std::collections::HashSet;
 use std::str;
 
-use rustc::lint::{
-    EarlyContext, EarlyLintPass, EarlyLintPassObject, LintArray, LintContext, LintPass,
-};
-use rustc_plugin::Registry;
-use syntax::ast::{Mod, NodeId};
-use syntax::source_map::Span;
-use syntax_pos::{BytePos, Pos};
+use rustc_ast::{ast::Mod, node_id::NodeId};
+use rustc_lint::{EarlyContext, EarlyLintPass, LintContext};
+use rustc_session::{declare_lint, impl_lint_pass};
+use rustc_span::{BytePos, Span};
 
-static MPL_HEADER: &'static str = r#"
+static MPL_HEADER: &str = r#"
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 "#;
 
-declare_lint!(
-    MISSING_MPL,
+declare_lint! {
+    pub MISSING_MPL,
     Warn,
-    "Warn about missing MPL license header in source file."
-);
+    "detects missing MPL-2.0 license headers"
+}
 
 #[derive(Default)]
-struct Pass {
+struct MissingMpl {
     file_pos: HashSet<BytePos>,
 }
 
-impl LintPass for Pass {
-    fn get_lints(&self) -> LintArray {
-        lint_array!(MISSING_MPL)
-    }
-}
+impl_lint_pass!(MissingMpl => [MISSING_MPL]);
 
-impl EarlyLintPass for Pass {
+impl EarlyLintPass for MissingMpl {
     fn check_mod(&mut self, context: &EarlyContext, module: &Mod, _: Span, _: NodeId) {
         let span = module.inner;
 
@@ -77,16 +66,16 @@ impl EarlyLintPass for Pass {
             let distance = strsim::levenshtein(header, MPL_HEADER);
 
             if distance > MPL_HEADER.len() / 10 {
-                let lint_span = span.with_hi(span.lo() + BytePos::from_usize(1));
-                let message = format!("Missing MPL license header in source file:\n{}", MPL_HEADER);
-                context.span_lint(MISSING_MPL, lint_span, &message);
+                let lint_span = span.with_hi(span.lo() + BytePos(1));
+                let message = "Missing MPL license header in source file.";
+                let help = format!("The license should look like this:\n{}", MPL_HEADER);
+
+                context.struct_span_lint(MISSING_MPL, lint_span, |diag| {
+                    let mut diag = diag.build(message);
+                    diag.help(&help);
+                    diag.emit();
+                });
             }
         }
     }
-}
-
-#[plugin_registrar]
-pub fn plugin_registrar(reg: &mut Registry) {
-    let pass = Pass::default();
-    reg.register_early_lint_pass(box pass as EarlyLintPassObject);
 }
