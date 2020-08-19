@@ -23,6 +23,14 @@ Working on a project it is all too easy to forget to add such header to newly cr
 
 The `missing_mpl` lint aims to help make sure all relevant source files include such a header.
 
+## ⚠️ Deprecation ⚠️
+
+Compiler plugins have been deprecated with no replacement for custom lints:
+
+[Tracking issue (#29597)](https://github.com/rust-lang/rust/issues/29597#issuecomment-602006429)
+
+As such this plugin is unfortunately no longer functional.
+
 ## Getting Started
 
 Add the most recent [version](https://crates.io/crates/missing_mpl) of `missing_mpl`
